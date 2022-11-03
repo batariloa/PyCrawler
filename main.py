@@ -5,6 +5,8 @@ import itertools
 import asyncio
 from nltk import tokenize
 
+from langdetect import detect
+
 from search_results import SearchResults
 
 
@@ -31,22 +33,24 @@ async def look_at_links_from_list(number_of_links, list_of_links, search_phrase)
             headers={'User-Agent': 'Mozilla/5.0'}
         )
         webpage = urlopen(req).read()
-        bsobj = soup(webpage)
+        bsobj = soup(webpage, 'lxml')
 
         print(item)
 
         # find all mentions of the reference
-        regex = '[^.?!]*(?<=[.?\s!])'+search_phrase+'(?=[\s.?!])[^.?!]*[.?!]'
-        for paragraph in bsobj.find_all('div'):
-            print(paragraph.getText())
-            for skubi in re.findall(regex, paragraph.getText()):
-                print(skubi)
-                sentences.append(skubi)
+        regex = re.compile(search_phrase + '[^.]*\.')
+        all_text = bsobj.body
+        for pargagraph in bsobj(text=regex):
+            print(pargagraph)
+            sentences.append(pargagraph)
 
         # find all links in page
         for link in bsobj.findAll('a', attrs={'href': re.compile("^https://")}):
             if 'href' in link.attrs:
-                list_of_links.append(link.attrs['href'])
+                url = link.attrs['href']
+
+                list_of_links.append(url)
+
                 # track number of found links
                 links_found = links_found+1
 
@@ -56,6 +60,7 @@ async def look_at_links_from_list(number_of_links, list_of_links, search_phrase)
         # track number of searched links
         links_searched = links_searched+1
 
+    sentences = list(dict.fromkeys(sentences))
     results = SearchResults(links_searched, links_found, sentences)
     return results
 
@@ -64,7 +69,7 @@ loop = asyncio.new_event_loop()
 
 
 async def main():
-    results = await look_for_links("eggs")
+    results = await look_for_links("Prdonja")
     print("I searched ", results.pages_searched,
           "links and found ", results.links_found, " pages")
     print('Sentences where its mentioned, ', results.sentences)
