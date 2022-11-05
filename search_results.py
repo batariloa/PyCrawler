@@ -1,10 +1,11 @@
+from webpageinfo import WebpageInfo
+
+
 class SearchResults:
 
-    def __init__(self, pages_searched, links_found, sentences):
-        self.pages_searched = pages_searched
-        self.links_found = links_found
-        self.links_found_count = len(links_found)-1
-        self.sentences = sentences
+    def __init__(self, webpage_dict):
+        self.webpage_dict = webpage_dict
+        self.pages_searched = len(webpage_dict)
 
     def display(self):
         print("Roll No.: %d \npages_searched: %s" %
