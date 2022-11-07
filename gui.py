@@ -52,19 +52,24 @@ layout = [[
 ]]
 
 
-def runSearchClicked(search_phrase, depth_of_search):
+def runSearchClicked(search_phrase, depth_of_search, window, queue_of_results):
     crawler = Crawler()
 
     results = crawler.look_for_links(search_phrase, depth_of_search)
+    window['-WEBSITE LIST-'].update(
+        results.webpage_dict.keys())
     print("I searched ", results,
           "links and found  pages")
+
+    queue_of_results.append(results)
 
     return results
 
 
 def startGUI(executor):
 
-    queue_1 = []
+    queue_of_results = []
+    current_result = None
     window = sg.Window("Demo", layout)
 
     while True:
@@ -72,24 +77,30 @@ def startGUI(executor):
 
         if event == 'OPEN':
             print('open')
+            if (len(queue_of_results) > 0):
+                print(queue_of_results)
         # Start search
         if event == "OK":
             th = threading.Thread(
-                target=runSearchClicked, args=(values['_SEARCH PHRASE_'], 5))
+                target=runSearchClicked, args=(values['_SEARCH PHRASE_'], 5, window, queue_of_results))
             th.start()
 
         if event == sg.WIN_CLOSED:
             break
 
-        # show webpage info in the right layout
         if event == "-WEBSITE LIST-":
+            # if there is new data in the queue get it
+            if (len(queue_of_results) > 0):
+                current_result = queue_of_results.pop(
+                )
+
+        # show webpage info in the right layout
             selected_page_url = values["-WEBSITE LIST-"][0]
-            if (results):
-                selected_webpageinfo = results.webpage_dict[selected_page_url]
-                window['-PAGEINFO MENTIONS-'].update(
-                    selected_webpageinfo.mentions)
-                window['-PAGEINFO LINKS-'].update(
-                    selected_webpageinfo.links_found)
+            selected_webpageinfo = current_result.webpage_dict[selected_page_url]
+            window['-PAGEINFO MENTIONS-'].update(
+                selected_webpageinfo.mentions)
+            window['-PAGEINFO LINKS-'].update(
+                selected_webpageinfo.links_found)
 
             print(selected_page_url)
             print(selected_webpageinfo.links_found)
