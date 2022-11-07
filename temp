@@ -4,6 +4,7 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup as soup
 import re
 import itertools
+import asyncio
 import threading
 
 from crawl import Crawler
@@ -71,11 +72,13 @@ def startGUI(executor):
         event, values = window.read()
 
         if event == 'OPEN':
-            print('open')
+            loop = asyncio.get_event_loop()
+
         # Start search
         if event == "OK":
+            loop = asyncio.get_event_loop()
             th = threading.Thread(
-                target=runSearchClicked, args=(values['_SEARCH PHRASE_'], 5))
+                target=runSearchClicked, args=(values['_SEARCH PHRASE_'],))
             th.start()
 
         if event == sg.WIN_CLOSED:

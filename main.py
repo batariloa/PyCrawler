@@ -1,11 +1,13 @@
 from gui import startGUI
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 
 
-async def main():
+def main(loop):
+    executor = ProcessPoolExecutor(5)
 
-    await startGUI()
+    loop.run_in_executor(executor,  startGUI(executor))
 
 
 loop = asyncio.new_event_loop()
-loop.run_until_complete(main())
+loop.run_until_complete(main(loop))
