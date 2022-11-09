@@ -21,7 +21,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 class Crawler():
 
-    def look_at_links_from_list(self, number_of_links, links_to_be_searched, search_phrase):
+    def look_at_links_from_list(self, number_of_links, links_to_be_searched, search_phrase, event_list):
 
         options = webdriver.ChromeOptions()
 
@@ -84,20 +84,21 @@ class Crawler():
                     current_webpage_url, mentions, links_on_webpage)
 
                 webpage_dict[current_webpage_url] = webpageinfo
+                event_list.append(webpage_dict)
 
             print('Priority list: ', priority_links_to_be_searched)
         results = SearchResults(webpage_dict)
 
         return results
 
-    def look_for_links(self, search_phrase, depth_of_search):
+    def look_for_links(self, search_phrase, depth_of_search, queue_of_results):
 
         lista_linkova = [
             "https://www.google.com/search?q="+search_phrase.replace(' ', '+')+"&oq=gors&aqs=chrome.0.35i39j46i175i199i512j69i57j46i67j0i67j46i512j46i175i199i512j69i61.1204j0j7&sourceid=chrome&ie=UTF-8"]
 
         try:
             search_results = self.look_at_links_from_list(
-                depth_of_search, lista_linkova, search_phrase)
+                depth_of_search, lista_linkova, search_phrase, queue_of_results)
         except Exception as e:
             print('Problem while parsing: ', e)
             search_results = None
