@@ -6,11 +6,10 @@ import re
 import itertools
 import threading
 
-from crawl import Crawler
+from crawl_core.crawl import Crawler
 
 import tkinter
-from search_results import SearchResults
-from RealtimeSearchResults import ResultHandler
+from util.result_handler import ResultHandler
 
 
 layout_websites = [sg.Listbox(values=[], enable_events=True,

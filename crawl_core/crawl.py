@@ -1,10 +1,9 @@
-from search_results import SearchResults
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup as soup
 import re
 import itertools
 from langdetect import detect
-from webpageinfo import WebpageInfo
+from model.webpageinfo import WebpageInfo
 import requests
 from urllib.parse import urljoin
 
@@ -87,9 +86,6 @@ class Crawler():
                 result_handler.append(webpage_dict)
 
             print('Priority list: ', priority_links_to_be_searched)
-        results = SearchResults(webpage_dict)
-
-        return results
 
     def look_for_links(self, search_phrase, depth_of_search, result_handler):
 

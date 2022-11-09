@@ -1,4 +1,4 @@
-from gui import startGUI
+from gui.gui import startGUI
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 
