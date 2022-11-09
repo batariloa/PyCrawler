@@ -29,7 +29,7 @@ first_column_tab_group = [
     [sg.Column([[sg.Text("Search phrase:")], [
                sg.Input(key='_SEARCH PHRASE_', size=(35, 5))]]),
      sg.Column([[sg.Text("Depth of search:")], [
-                sg.Input(key='_DEPTH OF SEARCH_', size=(15, 5))]])],
+                sg.Input("5", key='_DEPTH OF SEARCH_', size=(15, 5))]])],
 
     [sg.Button("OK")],
     layout_websites,
@@ -37,9 +37,15 @@ first_column_tab_group = [
 ]
 
 
-layout_pageinfo = [[sg.Text("Page URL: ")],
+layout_pageinfo = [[sg.Text("Page URL: "), sg.Text("None", key='-CURRENT URL-', size=(50, 1))],
                    [sg.HSeparator()],
-                   [sg.Text("Number of links found: ")],
+                   [sg.Text("Number of links found: "), sg.Text(
+                       "0", key='-WEBPAGE LINKS FOUND-')],
+
+                   [sg.HSeparator()],
+
+                   [sg.Text("Number of mentions found: "), sg.Text(
+                       "0", key='-WEBPAGE MENTIONS FOUND-')],
                    [sg.TabGroup([
                        [sg.Tab('Mentions', layout_pageinfo_mentions,
                                tooltip='Details', key='-PAGEINFO MENTIONS-')],
@@ -57,6 +63,7 @@ layout = [[
 
 
 def runSearchClicked(search_phrase, depth_of_search, window, queue_of_results):
+
     crawler = Crawler()
 
     results = crawler.look_for_links(search_phrase, depth_of_search)
@@ -107,6 +114,11 @@ def startGUI():
                     selected_webpageinfo.mentions)
                 window['-PAGEINFO LINKS-'].update(
                     selected_webpageinfo.links_found)
+                window['-CURRENT URL-'].update(selected_webpageinfo.webpage)
+                window['-WEBPAGE LINKS FOUND-'].update(
+                    len(selected_webpageinfo.links_found))
+                window['-WEBPAGE MENTIONS FOUND-'].update(
+                    len(selected_webpageinfo.mentions))
 
                 print(selected_page_url)
                 print(selected_webpageinfo.links_found)
@@ -114,7 +126,8 @@ def startGUI():
         # show selected mention in textbox
         if event == '-PAGEINFO MENTIONS-':
 
-            mentions = values['-PAGEINFO MENTIONS-'][0]
-            window['textbox'].update(mentions)
+            mentions = values['-PAGEINFO MENTIONS-']
+            if (len(mentions) > 0):
+                window['textbox'].update(mentions[0])
 
     window.close()
