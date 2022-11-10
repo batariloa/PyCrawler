@@ -11,82 +11,45 @@ from crawl_core.crawl import Crawler
 import tkinter
 from util.result_handler import ResultHandler
 
+from util.driver_util import createChromeDriver
+import pyperclip
 
-layout_websites = [sg.Listbox(values=[], enable_events=True,
-                              size=(50, 30),  key='-WEBSITE LIST-')]
+from gui.button_functions import runSearchClicked, resumeClicked
 
-
-layout_pageinfo_mentions = [
-    [sg.Listbox(values=[], enable_events=True,
-                size=(50, 20), key="-PAGEINFO MENTIONS-")],
-    [sg.Multiline(size=(50, 10), key='textbox')]]
-
-layout_pageinfo_links = [
-    [sg.Listbox(values=[], enable_events=True,
-                size=(50, 30), key="-PAGEINFO LINKS-")]]
-
-first_column_tab_group = [
-    [sg.Column([[sg.Text("Search phrase:")], [
-               sg.Input(key='_SEARCH PHRASE_', size=(35, 5))]]),
-     sg.Column([[sg.Text("Depth of search:")], [
-                sg.Input("5", key='_DEPTH OF SEARCH_', size=(15, 5))]])],
-
-    [sg.Button("OK")],
-    layout_websites,
-    [sg.Button("OPEN")]
-]
-
-
-layout_pageinfo = [[sg.Text("Page URL: "), sg.Text("None", key='-CURRENT URL-', size=(50, 1))],
-                   [sg.HSeparator()],
-                   [sg.Text("Number of links found: "), sg.Text(
-                       "0", key='-WEBPAGE LINKS FOUND-')],
-
-                   [sg.HSeparator()],
-
-                   [sg.Text("Number of mentions found: "), sg.Text(
-                       "0", key='-WEBPAGE MENTIONS FOUND-')],
-                   [sg.TabGroup([
-                       [sg.Tab('Mentions', layout_pageinfo_mentions,
-                               tooltip='Details', key='-PAGEINFO MENTIONS-')],
-                       [sg.Tab('Links found', layout_pageinfo_links,
-                               tooltip='Details')]
-
-                   ])]]
-second_column = layout_pageinfo
-
-layout = [[
-    sg.Column(first_column_tab_group),
-    sg.VSeparator(),
-    sg.Column(second_column)
-]]
-
-
-def runSearchClicked(search_phrase, depth_of_search, result_handler):
-
-    crawler = Crawler()
-
-    results = crawler.look_for_links(
-        search_phrase, depth_of_search, result_handler)
-
-    return results
+from gui.layout import layout
 
 
 def startGUI():
     current_result = None
-    window = sg.Window("Demo", layout)
+    window = sg.Window("PyCrawl", layout)
     result_handler = ResultHandler(window)
+    crawler = None
 
     while True:
         event, values = window.read()
 
-        if event == "OK":
-            th = threading.Thread(
-                target=runSearchClicked, args=(str(values['_SEARCH PHRASE_']), int(values['_DEPTH OF SEARCH_']), result_handler))
-            th.start()
-
+        # close window
         if event == sg.WIN_CLOSED:
             break
+
+        # start search in separate Thread
+        if event == "Start":
+            crawler = Crawler(
+                str(values['_SEARCH PHRASE_']), int(values['_DEPTH OF SEARCH_']), result_handler)
+            th = threading.Thread(
+                target=runSearchClicked, args=(crawler, window))
+            th.start()
+
+        if event == "Stop":
+            result_handler.stop()
+
+        if event == "Pause":
+            result_handler.pause()
+
+        if event == "Resume":
+            th = threading.Thread(
+                target=resumeClicked, args=(crawler, window))
+            th.start()
 
         if event == "-WEBSITE LIST-":
 
@@ -114,5 +77,19 @@ def startGUI():
             mentions = values['-PAGEINFO MENTIONS-']
             if (len(mentions) > 0):
                 window['textbox'].update(mentions[0])
+
+        if event == '-COPY TO CLIPBOARD-':
+            current_link_selected = values['-PAGEINFO LINKS-'][0]
+
+            if (current_link_selected):
+                pyperclip.copy(current_link_selected)
+
+        if event == '-OPEN LINK IN BROWSER-':
+            current_link_selected = values['-PAGEINFO LINKS-'][0]
+
+            if (current_link_selected):
+                driver = createChromeDriver()
+
+            driver.get(current_link_selected)
 
     window.close()
