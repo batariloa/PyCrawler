@@ -11,12 +11,12 @@ from crawl_core.crawl import Crawler
 import tkinter
 from util.result_handler import ResultHandler
 
-from util.driver_util import createChromeDriver
 import pyperclip
 
-from gui.button_functions import runSearchClicked, resumeClicked
-
+from gui.button_functions import runSearchClicked, resumeClicked, openLinkInBrowser, updatePageInfo
 from gui.layout import layout
+
+from my_enum.gui_variables import WindowVariables as wv
 
 
 def startGUI():
@@ -35,7 +35,7 @@ def startGUI():
         # start search in separate Thread
         if event == "Start":
             crawler = Crawler(
-                str(values['_SEARCH PHRASE_']), int(values['_DEPTH OF SEARCH_']), result_handler)
+                str(values[wv.input_search_phrase]), int(values[wv.input_depth_of_search]), result_handler)
             th = threading.Thread(
                 target=runSearchClicked, args=(crawler, window))
             th.start()
@@ -51,45 +51,31 @@ def startGUI():
                 target=resumeClicked, args=(crawler, window))
             th.start()
 
+        # show selected webpage info in the right layout
         if event == "-WEBSITE LIST-":
 
-            # show webpage info in the right layout
-            if (values['-WEBSITE LIST-']):
-                selected_page_url = values["-WEBSITE LIST-"][0]
+            if (values[wv.list_of_websites]):
+                selected_page_url = values[wv.list_of_websites][0]
+
                 selected_webpageinfo = result_handler.current_result[
                     selected_page_url]
-                window['-PAGEINFO MENTIONS-'].update(
-                    selected_webpageinfo.mentions)
-                window['-PAGEINFO LINKS-'].update(
-                    selected_webpageinfo.links_found)
-                window['-CURRENT URL-'].update(selected_webpageinfo.webpage)
-                window['-WEBPAGE LINKS FOUND-'].update(
-                    len(selected_webpageinfo.links_found))
-                window['-WEBPAGE MENTIONS FOUND-'].update(
-                    len(selected_webpageinfo.mentions))
 
-                print(selected_page_url)
-                print(selected_webpageinfo.links_found)
-
+                updatePageInfo(window, selected_webpageinfo)
         # show selected mention in textbox
-        if event == '-PAGEINFO MENTIONS-':
-
-            mentions = values['-PAGEINFO MENTIONS-']
+        if event == wv.list_of_page_mentions:
+            mentions = values[wv.list_of_page_mentions]
             if (len(mentions) > 0):
                 window['textbox'].update(mentions[0])
 
-        if event == '-COPY TO CLIPBOARD-':
-            current_link_selected = values['-PAGEINFO LINKS-'][0]
-
+        # clicked copy to clipboard
+        if event == wv.btn_copy_to_clipboard:
+            current_link_selected = values[wv.list_of_page_links][0]
             if (current_link_selected):
                 pyperclip.copy(current_link_selected)
 
-        if event == '-OPEN LINK IN BROWSER-':
-            current_link_selected = values['-PAGEINFO LINKS-'][0]
-
-            if (current_link_selected):
-                driver = createChromeDriver()
-
-            driver.get(current_link_selected)
+        # clicked open link in browser
+        if event == wv.btn_open_link_in_browser:
+            current_link_selected = values[wv.list_of_page_links][0]
+            openLinkInBrowser(current_link_selected)
 
     window.close()

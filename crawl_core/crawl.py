@@ -37,7 +37,7 @@ class Crawler():
     def look_at_links_from_list(self,):
 
         # use chrome driver
-        driver = createChromeDriver()
+        driver = createChromeDriver(headless=True)
 
         # iterate over links queued inside list of links and create bsobj
         for i in range(0, self.depth_of_search):

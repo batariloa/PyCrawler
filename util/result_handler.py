@@ -1,3 +1,6 @@
+from my_enum.gui_variables import WindowVariables as wv
+
+
 class ResultHandler():
 
     def __init__(self, window):
@@ -8,7 +11,7 @@ class ResultHandler():
 
     def append(self, value):
         self.current_result = value
-        self.window['-WEBSITE LIST-'].update(
+        self.window[wv.list_of_websites].update(
             self.current_result.keys())
 
     def getResult(self):
