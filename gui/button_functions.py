@@ -6,15 +6,45 @@ import time
 
 def runSearchClicked(crawler, window):
 
-    window[wv.text_status].update('Crawling..')
+    window[wv.start].update(disabled=True)
+    window[wv.stop].update(disabled=False)
+    window[wv.pause].update(disabled=False)
+    setStatusToCrawling(window)
+
     results = crawler.beginSearch()
-    window[wv.text_status].update('Done.')
+    setStatusToDone(window)
+    window[wv.start].update(disabled=False)
+    window[wv.stop].update(disabled=True)
+    window[wv.pause].update(disabled=True)
 
 
 def resumeClicked(crawler, window):
-    window[wv.text_status].update('Crawling..')
+    setStatusToCrawling(window)
+    window[wv.start].update(disabled=True)
+    window[wv.pause].update(disabled=False)
+    window[wv.stop].update(disabled=False)
+    window[wv.resume].update(disabled=True)
     crawler.resume_search()
-    window[wv.text_status].update('Done.')
+    setStatusToDone(window)
+    window[wv.start].update(disabled=False)
+    window[wv.stop].update(disabled=True)
+    window[wv.pause].update(disabled=True)
+
+
+def stopClicked(result_handler, window):
+    result_handler.stop()
+    window[wv.stop].update(disabled=True)
+    window[wv.start].update(disabled=False)
+    window[wv.resume].update(disabled=True)
+    window[wv.pause].update(disabled=True)
+    setStatusToDone(window)
+
+
+def pauseClicked(result_handler, window):
+    result_handler.pause()
+    window[wv.resume].update(disabled=False)
+    window[wv.pause].update(disabled=True)
+    window[wv.stop].update(disabled=False)
 
 
 def openLinkInBrowser(link):
@@ -43,3 +73,11 @@ def updatePageInfo(window, selected_webpageinfo):
         len(selected_webpageinfo.mentions))
 
     print(selected_webpageinfo.links_found)
+
+
+def setStatusToCrawling(window):
+    window[wv.text_status].update('Crawling..')
+
+
+def setStatusToDone(window):
+    window[wv.text_status].update('Done.')

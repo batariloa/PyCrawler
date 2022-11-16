@@ -20,6 +20,9 @@ def createChromeDriver(headless):
     options.add_argument("--window-size=1920x1080")
     options.add_argument("--disable-extensions")
 
+    if (not headless):
+        options.add_experimental_option("detach", True)
+
     driver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()),
         options=options

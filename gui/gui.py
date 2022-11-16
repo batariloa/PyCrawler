@@ -13,7 +13,7 @@ from util.result_handler import ResultHandler
 
 import pyperclip
 
-from gui.button_functions import runSearchClicked, resumeClicked, openLinkInBrowser, updatePageInfo
+from gui.button_functions import runSearchClicked, resumeClicked, openLinkInBrowser, updatePageInfo, stopClicked, pauseClicked
 from gui.layout import layout
 
 from my_enum.gui_variables import WindowVariables as wv
@@ -33,26 +33,27 @@ def startGUI():
             break
 
         # start search in separate Thread
-        if event == "Start":
-            crawler = Crawler(
-                str(values[wv.input_search_phrase]), int(values[wv.input_depth_of_search]), result_handler)
-            th = threading.Thread(
-                target=runSearchClicked, args=(crawler, window))
-            th.start()
+        if event == wv.start:
+            if (values[wv.input_depth_of_search].isnumeric() and int(values[wv.input_depth_of_search]) > 0 and len(values[wv.input_search_phrase]) > 0):
+                crawler = Crawler(
+                    str(values[wv.input_search_phrase]), int(values[wv.input_depth_of_search]), result_handler)
+                th = threading.Thread(
+                    target=runSearchClicked, args=(crawler, window))
+                th.start()
 
-        if event == "Stop":
-            result_handler.stop()
+        if event == wv.stop:
+            stopClicked(result_handler, window)
 
-        if event == "Pause":
-            result_handler.pause()
+        if event == wv.pause:
+            pauseClicked(result_handler, window)
 
-        if event == "Resume":
+        if event == wv.resume:
             th = threading.Thread(
                 target=resumeClicked, args=(crawler, window))
             th.start()
 
         # show selected webpage info in the right layout
-        if event == "-WEBSITE LIST-":
+        if event == wv.list_of_websites:
 
             if (values[wv.list_of_websites]):
                 selected_page_url = values[wv.list_of_websites][0]
@@ -65,7 +66,7 @@ def startGUI():
         if event == wv.list_of_page_mentions:
             mentions = values[wv.list_of_page_mentions]
             if (len(mentions) > 0):
-                window['textbox'].update(mentions[0])
+                window[wv.textbox].update(mentions[0])
 
         # clicked copy to clipboard
         if event == wv.btn_copy_to_clipboard:

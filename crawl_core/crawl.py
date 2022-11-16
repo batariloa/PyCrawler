@@ -14,9 +14,9 @@ from util.driver_util import createChromeDriver
 class Crawler():
 
     def empty_search_before_stop(self):
-        self.links_to_be_searched = []
-        self.priority_links_to_be_searched = []
-        self.reslt_dictionary = dict()
+        self.link_non_priority_queue = []
+        self.link_priority_queue = []
+        self.result_dictionary = dict()
 
     def resume_search(self):
         self.result_handler.resume()
@@ -27,12 +27,12 @@ class Crawler():
             search_results = None
 
     def __init__(self,  search_phrase, depth_of_search, result_handler):
-        self.links_to_be_searched = []
-        self.priority_links_to_be_searched = []
+        self.link_non_priority_queue = []
+        self.link_priority_queue = []
         self.depth_of_search = depth_of_search
         self.search_phrase = search_phrase
         self.result_handler = result_handler
-        self.reslt_dictionary = dict()
+        self.result_dictionary = dict()
 
     def look_at_links_from_list(self,):
 
@@ -42,39 +42,43 @@ class Crawler():
         # iterate over links queued inside list of links and create bsobj
         for i in range(0, self.depth_of_search):
 
-            # Stop search if stop flag is called
+            # Initiate fresh list of mentions and links on the current webpage
+            mentions = []
+            links_on_webpage = []
+
+            # Stop search if stop flag is activated
             if self.result_handler.stopFlag == True:
-                empty_search_before_stop()
+                self.empty_search_before_stop()
                 break
 
+            # Pause search if pause flag is activated
             if self.result_handler.pauseFlag == True:
                 break
 
-            if (len(self.priority_links_to_be_searched) == 0 and len(self.links_to_be_searched) == 0):
+            # Check if both non-priority and priority lists are empty
+            if (len(self.link_priority_queue) == 0 and len(self.link_non_priority_queue) == 0):
                 print
                 ('No links left to crawl.')
                 break
 
             # if there are no priority links, search in non-priority links
-            if (len(self.priority_links_to_be_searched) == 0 and len(self.links_to_be_searched) > 0):
+
+            if (len(self.link_priority_queue) > 0):
+                current_webpage_url = self.link_priority_queue.pop(
+                    0)
+            elif (len(self.link_priority_queue) == 0 and len(self.link_non_priority_queue) > 0):
                 print('no priority links')
-                current_webpage_url = self.links_to_be_searched.pop()
-            else:
-                if (len(self.priority_links_to_be_searched) > 0):
-                    current_webpage_url = self.priority_links_to_be_searched.pop()
+                current_webpage_url = self.link_non_priority_queue.pop(0)
 
-            mentions = []
-            links_on_webpage = []
-
+            # Open current webpage in webdriver
             try:
                 driver.get(current_webpage_url)
-                bsobj = soup(driver.page_source)
+                bsobj = soup(driver.page_source, 'html.parser')
             except Exception as e:
                 print('Error encountered:', e)
                 continue
 
-            # find all mentions of the reference
-
+            # find all mentions of the reference on the current webpage
             for pargagraph in bsobj.find_all(lambda tag: len(tag.find_all()) == 0 and self.search_phrase.lower() in tag.text.lower()):
                 mentions.append(pargagraph.getText())
 
@@ -84,12 +88,12 @@ class Crawler():
                     url = link.attrs['href']
                     links_on_webpage.append(url)
 
-                    # if it is a priority link
+                    # if the searched phrase is found on the current page at least once, add all found links to the priority queue
                     if (len(mentions) > 0):
-                        self.priority_links_to_be_searched.append(url)
+                        self.link_priority_queue.append(url)
                     else:
-                        # if this is not a priority link
-                        self.links_to_be_searched.append(url)
+                        # if no mentions are found, add the link to the non-priority queue
+                        self.link_non_priority_queue.append(url)
 
             # if page mentions phrase at least once
             if (len(mentions) > 0):
@@ -98,12 +102,14 @@ class Crawler():
                 webpageinfo = WebpageInfo(
                     current_webpage_url, mentions, links_on_webpage)
 
-                self.reslt_dictionary[current_webpage_url] = webpageinfo
-                self.result_handler.append(self.reslt_dictionary)
+                # add the current webpage info to the result dictionary
+                self.result_dictionary[current_webpage_url] = webpageinfo
+                # tell the result handler to append the new results to the GUI
+                self.result_handler.append(self.result_dictionary)
 
     def beginSearch(self):
 
-        self.links_to_be_searched.append(
+        self.link_non_priority_queue.append(
             "https://www.google.com/search?q="+self.search_phrase.replace(' ', '+'))
 
         self.resume_search()
